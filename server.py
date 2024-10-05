@@ -5,7 +5,7 @@ from pythonjsonlogger import jsonlogger
 
 app = Flask(__name__)
 
-hostname = os.getenv('hostname', 'unknown')
+hostname = os.getenv('HOSTNAME', 'unknown')
 
 @app.route('/')
 def request_data():
