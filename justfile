@@ -1,9 +1,10 @@
 DOCKERHUB_USERNAME := "rlmflores"
 IMAGE_NAME := "simple-web-server"
+TIMESTAMP := `date +%Y%m%d%H%M%S`
 
 # Define a recipe to build the Docker image
 build:
-    docker build -t {{IMAGE_NAME}} .
+    docker build --platform linux/amd64 -t {{IMAGE_NAME}} .
 
 # Define a recipe to run the Docker container
 run:
@@ -21,9 +22,11 @@ remove:
 rebuild: stop remove build run
 
 # Define a recipe to tag the Docker image
-tag:
+tag: build
     docker tag {{IMAGE_NAME}} {{DOCKERHUB_USERNAME}}/{{IMAGE_NAME}}:latest
+    docker tag {{IMAGE_NAME}} {{DOCKERHUB_USERNAME}}/{{IMAGE_NAME}}:{{TIMESTAMP}}
 
 # Define a recipe to push the Docker image to Docker Hub
 push: tag
     docker push {{DOCKERHUB_USERNAME}}/{{IMAGE_NAME}}:latest
+    docker push {{DOCKERHUB_USERNAME}}/{{IMAGE_NAME}}:{{TIMESTAMP}}

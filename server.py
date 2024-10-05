@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 from flask import Flask, request, jsonify
 import logging
 import os
@@ -15,4 +16,4 @@ def request_data():
   return response, 200
 
 if __name__ == '__main__':
-  app.run(debug=True)
+  app.run(debug=False)
