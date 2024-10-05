@@ -28,7 +28,7 @@ def random_failure(percentage):
                                'status_code': status_code,
                                'percentage': percentage},
                       'request_headers': dict(request.headers)})
-  return response, 200
+  return response, status_code
 
 if __name__ == '__main__':
   app.run(debug=False)
