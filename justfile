@@ -8,7 +8,7 @@ build:
 
 # Define a recipe to run the Docker container
 run:
-    docker run -p 5000:5000 {{IMAGE_NAME}}
+    docker run -p 8000:5000 {{IMAGE_NAME}}
 
 # Define a recipe to stop the Docker container
 stop:
