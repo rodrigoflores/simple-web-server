@@ -4,7 +4,8 @@ TIMESTAMP := `date +%Y%m%d%H%M%S`
 
 # Define a recipe to build the Docker image
 build:
-    docker build --platform linux/amd64 -t {{IMAGE_NAME}} .
+    docker build --platform linux/amd64 -t {{IMAGE_NAME}} . --load --no-cache
+    docker build --platform linux/arm64 -t {{IMAGE_NAME}} . --load --no-cache
 
 # Define a recipe to run the Docker container
 run:
