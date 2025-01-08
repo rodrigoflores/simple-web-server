@@ -1,15 +1,17 @@
 #!/usr/bin/env python3
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, g
 import random
 import os
 from pythonjsonlogger import jsonlogger
-from prometheus_client import Counter, make_wsgi_app
+from prometheus_client import Counter, make_wsgi_app, Histogram
 from werkzeug.middleware.dispatcher import DispatcherMiddleware
+import time
 
 app = Flask(__name__)
 
 in_request_counter = Counter('http_in_requests', 'Requests received', ["path", "method", "user_agent"])
 in_response_counter = Counter('http_in_responses', 'Responses sent', ["path", "method", "user_agent", "status_code"])
+in_response_latency = Histogram('http_in_response_latency', 'Response latency', ["path", "method", "user_agent", "status_code"])
 
 hostname = os.getenv('HOSTNAME', 'unknown')
 
@@ -19,6 +21,7 @@ def count_requests():
   path = request.path
   user_agent = request.headers.get('User-Agent')
   in_request_counter.labels(path=path, user_agent=user_agent, method=method).inc()
+  g.start_time = time.time()
 
 @app.after_request
 def count_responses(response):
@@ -27,6 +30,12 @@ def count_responses(response):
   user_agent = request.headers.get('User-Agent')
   status_code = response.status_code
   in_response_counter.labels(path=path, user_agent=user_agent, method=method, status_code=status_code).inc()
+
+  duration = time.time() - g.start_time
+  app.logger.info(f'Request duration: {duration}')
+  in_response_latency \
+    .labels(path=path, user_agent=user_agent, method=method, status_code=status_code) \
+    .observe(duration)
   return response
 
 @app.route('/')
