@@ -3,10 +3,31 @@ from flask import Flask, request, jsonify
 import random
 import os
 from pythonjsonlogger import jsonlogger
+from prometheus_client import Counter, make_wsgi_app
+from werkzeug.middleware.dispatcher import DispatcherMiddleware
 
 app = Flask(__name__)
 
+in_request_counter = Counter('http_in_requests', 'Requests received', ["path", "method", "user_agent"])
+in_response_counter = Counter('http_in_responses', 'Responses sent', ["path", "method", "user_agent", "status_code"])
+
 hostname = os.getenv('HOSTNAME', 'unknown')
+
+@app.before_request
+def count_requests():
+  method = request.method
+  path = request.path
+  user_agent = request.headers.get('User-Agent')
+  in_request_counter.labels(path=path, user_agent=user_agent, method=method).inc()
+
+@app.after_request
+def count_responses(response):
+  method = request.method
+  path = request.path
+  user_agent = request.headers.get('User-Agent')
+  status_code = response.status_code
+  in_response_counter.labels(path=path, user_agent=user_agent, method=method, status_code=status_code).inc()
+  return response
 
 @app.route('/')
 def request_data():
@@ -31,4 +52,7 @@ def random_failure(percentage):
   return response, status_code
 
 if __name__ == '__main__':
+  app.wsgi_app = DispatcherMiddleware(app.wsgi_app, {
+    '/metrics': make_wsgi_app()
+  })
   app.run(debug=False, port=8080, host='0.0.0.0')
